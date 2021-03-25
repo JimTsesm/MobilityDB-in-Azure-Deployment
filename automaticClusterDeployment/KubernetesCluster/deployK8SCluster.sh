@@ -12,8 +12,8 @@
 # VMsNumber determines the number of Worker nodes and VMsSize the size of each machine. 
 # SSHPublicKeyPath and SSHPrivateKeyPath values specify the location of the ssh private 
 # and public keys to access the created VMs. By default, the files will be stored in 
-# ~/.ssh/ directory. Finally, DeploymentZip specifies the path where the MobilityDB-in-Azure.tar.gz
-# file is stored. The tar file should contain the content of the github repository.
+# ~/.ssh/ directory. Finally, Gitrepo specifies the Github repository from which the
+# installation scripts and the rest source files will be found.
 
 ################################################################################
 #							    Configuration						   		   #
@@ -28,7 +28,7 @@ VMsSize="Standard_B2s" #Visit https://azure.microsoft.com/en-us/pricing/details/
 # to see the full list of available VMs
 SSHPublicKeyPath="~/.ssh/id_rsa.pub"
 SSHPrivateKeyPath="~/.ssh/id_rsa"
-DeploymentZip="/home/dimitris/Desktop/thesis/MobilityDB-in-Azure.tar.gz"
+Gitrepo="https://github.com/JimTsesm/MobilityDB-in-Azure-Deployment.git"
 ################################################################################
 
 
@@ -57,13 +57,8 @@ az vm create --name $VMName --resource-group $ResourceGroupName --public-ip-addr
 #Open port 6443 to allow K8S connections
 az vm open-port -g $ResourceGroupName -n $VMName --port 6443 --priority 1020;
 
-#Get VM's Public IP
-ip=`az vm show -d -g $ResourceGroupName -n $VMName --query publicIps -o tsv`
-
-#Send the bashscripts containing the commands to install the required software to the VM
-scp -o StrictHostKeyChecking=no -i $SSHPrivateKeyPath $DeploymentZip azureuser@$ip:/home/azureuser/MobilityDB-in-Azure.tar.gz;
-#Untar
-az vm run-command invoke -g $ResourceGroupName -n Coordinator --command-id RunShellScript --scripts "sudo tar xvzf /home/azureuser/MobilityDB-in-Azure.tar.gz -C /home/azureuser"
+#Clone the github repository to the VM
+az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "git clone $Gitrepo /home/azureuser/MobilityDB-in-Azure"
 
 #Execute the previously sent bash file	 	
 az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "sudo bash /home/azureuser/MobilityDB-in-Azure/automaticClusterDeployment/KubernetesCluster/installDockerK8s.sh"
@@ -93,13 +88,8 @@ do
 	#Open port 5432 to accept inbound connection from the Citus coordinator
 	az vm open-port -g $ResourceGroupName -n $VMName --port 5432 --priority 1010;
 
-	# #Get VM's Public IP
-	ip=`az vm show -d -g $ResourceGroupName -n $VMName --query publicIps -o tsv`
-
-	#Send the bashscripts containing the commands to install the required software to the VM
-	scp -o StrictHostKeyChecking=no -i $SSHPrivateKeyPath $DeploymentZip azureuser@$ip:/home/azureuser/MobilityDB-in-Azure.tar.gz;
-	#Untar
-	az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "sudo tar xvzf /home/azureuser/MobilityDB-in-Azure.tar.gz -C /home/azureuser"
+	#Clone the github repository to the VM
+	az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "git clone $Gitrepo /home/azureuser/MobilityDB-in-Azure"
 
 done
 
@@ -119,7 +109,7 @@ for i in $(seq 1 $VMsNumber)
 do
 	VMName="Worker$i";
 	
-	#Execute the previously sent bash file	 	
+	#Execute the runOnWorker.sh file to take the required actions to the Worker node	 	
 	az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "sudo bash /home/azureuser/MobilityDB-in-Azure/automaticClusterDeployment/KubernetesCluster/runOnWorker.sh" &
 done
 wait #for all the subprocesses of the parallel loop to terminate

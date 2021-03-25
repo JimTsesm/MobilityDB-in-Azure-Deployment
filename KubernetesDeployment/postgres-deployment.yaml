@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: citus-master
+spec:
+  selector:
+    matchLabels:
+      app: citus-master
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: citus-master
+    spec:
+    #Assign Citus coordinator to master node (needs to have untainted master node first)
+      nodeSelector:
+        dedicated: master
+      containers:
+        - name: citus
+          image: dimitris007/mobilitydb:citus10
+          imagePullPolicy: "IfNotPresent"
+          args:
+            - -c
+            - max_locks_per_transaction=128
+            - -c
+            - shared_preload_libraries=citus,postgis-2.5.so
+            - -c
+            - ssl=on
+            - -c
+            - ssl_cert_file=/etc/postgresql-secrets-vol/server.crt
+            - -c
+            - ssl_key_file=/etc/postgresql-secrets-vol/server.key
+          ports:
+            - containerPort: 5432
+          lifecycle:
+            postStart:
+              exec:
+              #Command to be executed after the initialization of the worker Pod: 1) Create Extensions
+                command: ["/bin/sh", "-c", "sleep 2; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS citus CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS MobilityDB CASCADE;\";"]
+          env:
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secrets-params
+                key: db
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secrets-params
+                key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: postgres-secrets-params
+                key: password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgredb
+            - mountPath: /etc/postgresql-secrets-vol
+              name: secret-vol
+            - mountPath: /etc/postgresql-secrets-vol/params
+              name: secret-vol-params
+      securityContext:
+        runAsUser: 0
+        supplementalGroups: [999,1000]
+        fsGroup: 999
+      volumes:
+        - name: postgredb
+          persistentVolumeClaim:
+            claimName: postgres-pv-claim-coordinator
+        - name: secret-vol
+          secret:
+            secretName: postgresql-secrets 
+            defaultMode: 0640
+        - name: secret-vol-params
+          secret:
+            secretName: postgres-secrets-params 

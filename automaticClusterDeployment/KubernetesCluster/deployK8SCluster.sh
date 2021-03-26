@@ -109,7 +109,7 @@ for i in $(seq 1 $VMsNumber)
 do
 	VMName="Worker$i";
 	
-	#Execute the runOnWorker.sh file to take the required actions to the Worker node	 	
+	#Execute the previously sent bash file	 	
 	az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellScript --scripts "sudo bash /home/azureuser/MobilityDB-in-Azure/automaticClusterDeployment/KubernetesCluster/runOnWorker.sh" &
 done
 wait #for all the subprocesses of the parallel loop to terminate

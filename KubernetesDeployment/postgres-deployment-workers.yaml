@@ -18,6 +18,7 @@ spec:
     spec:
     #Add Node Affinity to equally distribute the replicas in the Cluster's nodes.
     #Assign explicitly 1 replica per node with requiredDuringSchedulingIgnoredDuringExecution
+    #Do not allow to assign Worker nodes to the Control Plane node
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -27,6 +28,7 @@ spec:
                     operator: In
                     values:
                     - citus-workers
+                    - citus-master
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: citus-worker

@@ -54,10 +54,10 @@ spec:
               #apply the changes to pg_hba.conf file, 4) Add the worker node to citus cluster by using $POD_IP env variable, which is defined below, 5) Redistribute shards to the new nodes (work
               #with Citus > 10.0) 
                 command: ["/bin/sh", "-c", "sleep 7;printf \"local all all trust\nhost all all 127.0.0.1/32 trust\nhost all all ::1/128 trust\nhost all all 0.0.0.0/0 trust\n\" > /var/lib/postgresql/data/pg_hba.conf; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS citus CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS MobilityDB CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"select pg_reload_conf();\"; PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT * from master_add_node('\"$POD_IP\"', 5432);\";  PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT rebalance_table_shards();\";"]
-            preStop:
-              exec:
+#            preStop:
+#              exec:
               #Commands to be executed before terminating the worker Pod: 1)Unregister current Worker from Citus cluster by using $POD_ID env variable
-                command: ["/bin/sh", "-c", "PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT * from master_remove_node('\"$POD_IP\"', 5432);\";"]
+#                command: ["/bin/sh", "-c", "PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT * from master_remove_node('\"$POD_IP\"', 5432);\";"]
           env:
           - name: POSTGRES_DB
             valueFrom:

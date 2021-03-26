@@ -21,6 +21,9 @@ sudo echo "{\"exec-opts\": [\"native.cgroupdriver=systemd\"]}" > /home/azureuser
 sudo mv /home/azureuser/daemon.json /etc/docker/daemon.json
 sudo systemctl restart docker
 
+# Start downloading the image in the background to gain time later
+sudo docker pull dimitris007/mobilitydb:citus10 &
+
 # Install Kubernetes
 sudo apt install selinux-utils
 setenforce 0

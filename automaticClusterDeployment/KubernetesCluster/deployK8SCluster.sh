@@ -57,8 +57,8 @@ az vm create --name $VMName --resource-group $ResourceGroupName --public-ip-addr
 #Open port 6443 to allow K8S connections
 az vm open-port -g $ResourceGroupName -n $VMName --port 6443 --priority 1020;
 
-#Open port 30000-35000 to allow K8S service exposure
-az vm open-port -g $ResourceGroupName -n $VMName --port 30000-35000 --priority 1030;
+#Open port 30001 to allow K8S service exposure
+az vm open-port -g $ResourceGroupName -n $VMName --port 30001 --priority 1030;
 
 
 #Clone the github repository to the VM

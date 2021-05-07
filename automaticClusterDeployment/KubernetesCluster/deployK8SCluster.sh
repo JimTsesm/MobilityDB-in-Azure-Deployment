@@ -18,12 +18,12 @@
 ################################################################################
 #							    Configuration						   		   #
 ################################################################################
-AzureUsername="andrea.armani@student-cs.fr"
-ResourceGroupName="ClusterGroup"
+AzureUsername="dimitrios.tsesmelis@ulb.be"
+ResourceGroupName="DimitrisMSc"
 Location="germanywestcentral"
 VirtualNetwork="clustergroup-vnet"
-Subscription="Andreacs"
-VMsNumber=1
+Subscription="WIT"
+VMsNumber=3
 VMsSize="Standard_B2s" #Visit https://azure.microsoft.com/en-us/pricing/details/virtual-machines/series/ 
 # to see the full list of available VMs
 SSHPublicKeyPath="~/.ssh/id_rsa.pub"

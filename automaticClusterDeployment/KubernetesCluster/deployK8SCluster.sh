@@ -18,12 +18,12 @@
 ################################################################################
 #							    Configuration						   		   #
 ################################################################################
-AzureUsername="dimitrios.tsesmelis@ulb.be"
-ResourceGroupName="DimitrisMSc"
+AzureUsername="zas1122@hotmail.com"
+ResourceGroupName="ClusterGroup"
 Location="germanywestcentral"
 VirtualNetwork="clustergroup-vnet"
-Subscription="WIT"
-VMsNumber=3
+Subscription="CODE WIT"
+VMsNumber=1
 VMsSize="Standard_B2s" #Visit https://azure.microsoft.com/en-us/pricing/details/virtual-machines/series/ 
 # to see the full list of available VMs
 SSHPublicKeyPath="~/.ssh/id_rsa.pub"
@@ -43,7 +43,6 @@ az group create --name $ResourceGroupName --location $Location
 
 #Create a new Virtual Network
 az network vnet create --name $VirtualNetwork --resource-group $ResourceGroupName --subnet-name default
-
 
 ################################################################################
 #							    Coordinator Creation						   #
@@ -71,7 +70,7 @@ az vm run-command invoke -g $ResourceGroupName -n $VMName --command-id RunShellS
 
 #Get Join token from the logs of the previous command (sudo kubeadm init)
 #Operations: cat the log, remove \n and \, get everything after "kubeadm join" until the next \ and finally remove the \
-JOINCOMMAND=$(az vm run-command invoke -g $ResourceGroupName -n Coordinator --command-id RunShellScript --scripts "sudo cat /var/lib/waagent/run-command/download/2/stdout" | sed 's/\\n/ /g' | sed 's/\\\\/ /g' |grep -o 'kubeadm join.*   \[' | sed 's/\[//g')
+JOINCOMMAND=$(az vm run-command invoke -g $ResourceGroupName -n Coordinator --command-id RunShellScript --scripts "sudo cat /var/lib/waagent/run-command/download/2/stdout" | sed 's/\\n/ /g' | sed 's/\\\\/ /g' |grep -o 'kubeadm join.*   \[' | sed 's/\[//g' | sed 's/\\t/ /g')
 
 echo "Coordinator Node was successfully deployed."
 ################################################################################

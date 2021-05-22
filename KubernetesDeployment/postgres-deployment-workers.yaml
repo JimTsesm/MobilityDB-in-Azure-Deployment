@@ -45,15 +45,16 @@ spec:
             - ssl_cert_file=/etc/postgresql-secrets-vol/server.crt
             - -c
             - ssl_key_file=/etc/postgresql-secrets-vol/server.key
+            - -c
+            - max_connections=500
           ports:
             - containerPort: 5432
           lifecycle:
             postStart:
               exec:
               #Commands to be executed after the initialization of the worker Pod: 1) Configure pg_hba.conf to allow connection with the master node, 2) Create Extensions, 3) Refresh the server to
-              #apply the changes to pg_hba.conf file, 4) Add the worker node to citus cluster by using $POD_IP env variable, which is defined below, 5) Redistribute shards to the new nodes (work
-              #with Citus > 10.0) 
-                command: ["/bin/sh", "-c", "sleep 7;printf \"local all all trust\nhost all all 127.0.0.1/32 trust\nhost all all ::1/128 trust\nhost all all 0.0.0.0/0 trust\n\" > /var/lib/postgresql/data/pg_hba.conf; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS citus CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS MobilityDB CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"select pg_reload_conf();\"; PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT * from master_add_node('\"$POD_IP\"', 5432);\";  PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT rebalance_table_shards();\";"]
+              #apply the changes to pg_hba.conf file, 4) Add the worker node to citus cluster by using $POD_IP env variable, which is defined below
+                command: ["/bin/sh", "-c", "sleep 7;printf \"local all all trust\nhost all all 127.0.0.1/32 trust\nhost all all ::1/128 trust\nhost all all 0.0.0.0/0 trust\n\" > /var/lib/postgresql/data/pg_hba.conf; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS citus CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"CREATE EXTENSION IF NOT EXISTS MobilityDB CASCADE;\"; psql -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\"  --command=\"select pg_reload_conf();\"; PGPASSWORD=\"$( cat /etc/postgresql-secrets-vol/params/password )\" psql --host=citus-master -U \"$( cat /etc/postgresql-secrets-vol/params/username )\" -d \"$( cat /etc/postgresql-secrets-vol/params/db )\" --command=\"SELECT * from master_add_node('\"$POD_IP\"', 5432);\";"]
 #            preStop:
 #              exec:
               #Commands to be executed before terminating the worker Pod: 1)Unregister current Worker from Citus cluster by using $POD_ID env variable

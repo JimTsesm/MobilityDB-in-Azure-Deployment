@@ -1,8 +1,6 @@
 #!/bin/bash
 
 #Shell commands to be run on K8S master node.
-#Cluster initialization. 
-sudo kubeadm init
 
 # Install pip
 yes | sudo apt install python3-pip
@@ -18,3 +16,6 @@ echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO 
     sudo tee /etc/apt/sources.list.d/azure-cli.list
 yes | sudo apt-get update
 yes | sudo apt-get install azure-cli
+
+#Cluster initialization. 
+sudo kubeadm init
